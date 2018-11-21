@@ -20,15 +20,16 @@ android {
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
 
-    compileOnly 'com.google.android.things:androidthings:+'
+    compileOnly "com.google.android.things:androidthings:+"
 
-    implementation 'com.google.android.things.contrib:driver-gps:1.1'
+    implementation "com.android.support:support-v4:$supportVersion"
 
-    implementation "com.android.support:support-v4:28.0.0"
+    implementation "com.google.android.things.contrib:driver-gps:$gpsDriverVersion"
 
-    implementation 'com.google.firebase:firebase-core:16.0.4'
-    implementation 'com.google.firebase:firebase-database:16.0.4'
-    implementation 'com.google.firebase:firebase-storage:16.0.1'
+    implementation "com.google.firebase:firebase-core:$firebaseVersion"
+    implementation "com.google.firebase:firebase-auth:$authVersion"
+    implementation "com.google.firebase:firebase-firestore:$firestoneVersion"
+    implementation "com.google.firebase:firebase-storage:$storageVersion"
 }
 
 apply plugin: 'com.google.gms.google-services'

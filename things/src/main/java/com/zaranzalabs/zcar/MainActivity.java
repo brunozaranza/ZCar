@@ -19,17 +19,9 @@ import android.support.annotation.NonNull;
 import android.util.Log;
 
 import com.google.android.gms.tasks.Continuation;
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.OnFailureListener;
-import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.things.contrib.driver.gps.NmeaGpsDriver;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ServerValue;
-import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
@@ -45,7 +37,7 @@ public class MainActivity extends Activity {
     public static final int UART_BAUD = 9600;
     public static final float ACCURACY = 2.5f;
 
-    private FirebaseDatabase mDatabase;
+    private FirebaseFirestore mDatabase;
     private FirebaseStorage mStorage;
     private ZCamera mCamera;
 
@@ -70,31 +62,31 @@ public class MainActivity extends Activity {
             return;
         }
 
-        mDatabase = FirebaseDatabase.getInstance();
+        mDatabase = FirebaseFirestore.getInstance();
         mStorage = FirebaseStorage.getInstance();
 
         configCamera();
         configGPS();
 
-        DatabaseReference dbReference = mDatabase.getReference("status_camera");
-        dbReference.setValue(false);
-
-        dbReference.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-
-                boolean value = dataSnapshot.getValue(Boolean.class);
-
-                if (value == true) {
-                    mCamera.takePicture();
-                }
-            }
-
-            @Override
-            public void onCancelled(DatabaseError error) {
-                Log.w("LOG", "Failed to read value.", error.toException());
-            }
-        });
+//        DatabaseReference dbReference = mDatabase.getReference("status_camera");
+//        dbReference.setValue(false);
+//
+//        dbReference.addValueEventListener(new ValueEventListener() {
+//            @Override
+//            public void onDataChange(DataSnapshot dataSnapshot) {
+//
+//                boolean value = dataSnapshot.getValue(Boolean.class);
+//
+//                if (value == true) {
+//                    mCamera.takePicture();
+//                }
+//            }
+//
+//            @Override
+//            public void onCancelled(DatabaseError error) {
+//                Log.w("LOG", "Failed to read value.", error.toException());
+//            }
+//        });
     }
 
     @Override
@@ -123,47 +115,47 @@ public class MainActivity extends Activity {
 
     private void onPictureTaken(final byte[] imageBytes) {
         if (imageBytes != null) {
-            DatabaseReference dbReference = mDatabase.getReference("status_camera");
-            dbReference.setValue(false);
+//            DatabaseReference dbReference = mDatabase.getReference("status_camera");
+//            dbReference.setValue(false);
+//
+//            final DatabaseReference log = mDatabase.getReference("logs").push();
+//            final StorageReference imageRef = mStorage.getReference().child(log.getKey());
 
-            final DatabaseReference log = mDatabase.getReference("logs").push();
-            final StorageReference imageRef = mStorage.getReference().child(log.getKey());
+//            UploadTask task = imageRef.putBytes(imageBytes);
+//            task.continueWithTask(new Continuation<UploadTask.TaskSnapshot, Task<Uri>>() {
+//                @Override
+//                public Task<Uri> then(@NonNull Task<UploadTask.TaskSnapshot> task) throws Exception {
+//                    if (!task.isSuccessful()) {
+//                        throw task.getException();
+//                    }
+//                    return imageRef.getDownloadUrl();
+//                }
+//            }).addOnCompleteListener(new OnCompleteListener<Uri>() {
+//                @Override
+//                public void onComplete(@NonNull Task<Uri> task) {
+//                    if (task.isSuccessful()) {
+//                        Uri downloadUri = task.getResult();
+//
+//                        Log.i(TAG, "Image upload successful");
+//                        log.child("timestamp").setValue(ServerValue.TIMESTAMP);
+//                        log.child("image").setValue(downloadUri.toString());
+//                    }
+//                }
+//            });
 
-            UploadTask task = imageRef.putBytes(imageBytes);
-            task.continueWithTask(new Continuation<UploadTask.TaskSnapshot, Task<Uri>>() {
-                @Override
-                public Task<Uri> then(@NonNull Task<UploadTask.TaskSnapshot> task) throws Exception {
-                    if (!task.isSuccessful()) {
-                        throw task.getException();
-                    }
-                    return imageRef.getDownloadUrl();
-                }
-            }).addOnCompleteListener(new OnCompleteListener<Uri>() {
-                @Override
-                public void onComplete(@NonNull Task<Uri> task) {
-                    if (task.isSuccessful()) {
-                        Uri downloadUri = task.getResult();
-
-                        Log.i(TAG, "Image upload successful");
-                        log.child("timestamp").setValue(ServerValue.TIMESTAMP);
-                        log.child("image").setValue(downloadUri.toString());
-                    }
-                }
-            });
-
-            task.addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
-                @Override
-                public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-
-                }
-            }).addOnFailureListener(new OnFailureListener() {
-                @Override
-                public void onFailure(@NonNull Exception e) {
-                    // clean up this entry
-                    Log.w(TAG, "Unable to upload image to Firebase");
-                    log.removeValue();
-                }
-            });
+//            task.addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+//                @Override
+//                public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+//
+//                }
+//            }).addOnFailureListener(new OnFailureListener() {
+//                @Override
+//                public void onFailure(@NonNull Exception e) {
+//                    // clean up this entry
+//                    Log.w(TAG, "Unable to upload image to Firebase");
+//                    log.removeValue();
+//                }
+//            });
         }
     }
 
@@ -254,16 +246,16 @@ public class MainActivity extends Activity {
 
     private void sendLocationToFirebase(Location location)
     {
-        DatabaseReference dbReference = mDatabase.getReference("location");
-        dbReference.child("lat").setValue(location.getLatitude());
-        dbReference.child("lon").setValue(location.getLongitude());
-        dbReference.child("speed").setValue(location.getSpeed());
-        dbReference.child("altitude").setValue(location.getAltitude());
-        dbReference.child("time").setValue(location.getTime());
-        dbReference.child("accuracy").setValue(location.getAccuracy());
-        dbReference.child("bearing").setValue(location.getBearing());
-        dbReference.child("bearing_accuracy_degrees").setValue(location.getBearingAccuracyDegrees());
-        dbReference.child("vertical_accuracy_meters").setValue(location.getVerticalAccuracyMeters());
-        dbReference.child("speed_accuracy_meters_per_second").setValue(location.getSpeedAccuracyMetersPerSecond());
+//        DatabaseReference dbReference = mDatabase.getReference("location");
+//        dbReference.child("lat").setValue(location.getLatitude());
+//        dbReference.child("lon").setValue(location.getLongitude());
+//        dbReference.child("speed").setValue(location.getSpeed());
+//        dbReference.child("altitude").setValue(location.getAltitude());
+//        dbReference.child("time").setValue(location.getTime());
+//        dbReference.child("accuracy").setValue(location.getAccuracy());
+//        dbReference.child("bearing").setValue(location.getBearing());
+//        dbReference.child("bearing_accuracy_degrees").setValue(location.getBearingAccuracyDegrees());
+//        dbReference.child("vertical_accuracy_meters").setValue(location.getVerticalAccuracyMeters());
+//        dbReference.child("speed_accuracy_meters_per_second").setValue(location.getSpeedAccuracyMetersPerSecond());
     }
 }

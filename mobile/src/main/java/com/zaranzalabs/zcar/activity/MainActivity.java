@@ -1,10 +1,12 @@
-package com.zaranzalabs.zcar;
+package com.zaranzalabs.zcar.activity;
 
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 
+import com.google.firebase.auth.FirebaseAuth;
+import com.zaranzalabs.zcar.R;
 import com.zaranzalabs.zcar.adapter.CellMainAdapter;
 
 import java.util.ArrayList;

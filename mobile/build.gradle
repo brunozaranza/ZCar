@@ -1,4 +1,5 @@
 apply plugin: 'com.android.application'
+apply plugin: 'com.google.gms.google-services'
 
 android {
     compileSdkVersion 28
@@ -8,6 +9,7 @@ android {
         targetSdkVersion 28
         versionCode 1
         versionName "1.0"
+        resConfigs "en", "pt"
     }
     buildTypes {
         release {
@@ -19,8 +21,18 @@ android {
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
+
     implementation "com.android.support:appcompat-v7:$supportVersion"
     implementation "com.android.support:recyclerview-v7:$supportVersion"
     implementation "com.android.support:cardview-v7:$supportVersion"
     implementation "com.android.support:design:$supportVersion"
+
+    implementation "com.google.firebase:firebase-core:$firebaseVersion"
+
+    implementation "com.google.firebase:firebase-auth:$authVersion"
+
+    implementation("com.firebaseui:firebase-ui-auth:4.1.0") {
+        exclude group: 'com.android.support'
+    }
+
 }
