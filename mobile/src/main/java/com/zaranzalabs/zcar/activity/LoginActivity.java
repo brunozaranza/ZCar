@@ -23,7 +23,7 @@ public class LoginActivity extends AppCompatActivity
 
         FirebaseAuth auth = FirebaseAuth.getInstance();
         if (auth.getCurrentUser() != null) {
-            // already signed in
+            openMainActivity();
         } else {
             openSingInActivity();
         }
@@ -38,7 +38,7 @@ public class LoginActivity extends AppCompatActivity
 
             if (resultCode == RESULT_OK) {
                 FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-                // ...
+                openMainActivity();
             } else {
                 // Sign in failed. If response is null the user canceled the
                 // sign-in flow using the back button. Otherwise check
@@ -55,6 +55,13 @@ public class LoginActivity extends AppCompatActivity
                         .setAvailableProviders(getProviders())
                         .build(),
                 RC_SIGN_IN);
+    }
+
+    private void openMainActivity()
+    {
+        Intent intent = new Intent(this, MainActivity.class);
+        startActivity(intent);
+        finish();
     }
 
     private List<AuthUI.IdpConfig> getProviders()

@@ -20,7 +20,7 @@ android {
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
 
-    compileOnly "com.google.android.things:androidthings:+"
+    compileOnly 'com.google.android.things:androidthings:+'
 
     implementation "com.android.support:support-v4:$supportVersion"
 

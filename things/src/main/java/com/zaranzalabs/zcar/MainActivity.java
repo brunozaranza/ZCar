@@ -11,22 +11,21 @@ import android.location.LocationManager;
 import android.location.OnNmeaMessageListener;
 import android.media.Image;
 import android.media.ImageReader;
-import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
-import com.google.android.gms.tasks.Continuation;
-import com.google.android.gms.tasks.Task;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.things.contrib.driver.gps.NmeaGpsDriver;
+import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.storage.FirebaseStorage;
-import com.google.firebase.storage.StorageReference;
-import com.google.firebase.storage.UploadTask;
 import com.zaranzalabs.zcar.board.BoardDefaults;
 import com.zaranzalabs.zcar.camera.ZCamera;
+import com.zaranzalabs.zcar.pojo.Headlights;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -37,7 +36,7 @@ public class MainActivity extends Activity {
     public static final int UART_BAUD = 9600;
     public static final float ACCURACY = 2.5f;
 
-    private FirebaseFirestore mDatabase;
+    private FirebaseFirestore firestore;
     private FirebaseStorage mStorage;
     private ZCamera mCamera;
 
@@ -62,11 +61,26 @@ public class MainActivity extends Activity {
             return;
         }
 
-        mDatabase = FirebaseFirestore.getInstance();
+        firestore = FirebaseFirestore.getInstance();
         mStorage = FirebaseStorage.getInstance();
 
         configCamera();
         configGPS();
+
+        firestore.collection("headlights")
+                .add(new Headlights(true))
+                .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
+                    @Override
+                    public void onSuccess(DocumentReference documentReference) {
+                        Log.d(TAG, "DocumentSnapshot added with ID: " + documentReference.getId());
+                    }
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        Log.w(TAG, "Error adding document", e);
+                    }
+                });
 
 //        DatabaseReference dbReference = mDatabase.getReference("status_camera");
 //        dbReference.setValue(false);

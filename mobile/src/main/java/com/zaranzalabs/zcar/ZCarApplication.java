@@ -1,10 +1,10 @@
 package com.zaranzalabs.zcar;
 
-import android.app.Application;
+import android.support.multidex.MultiDexApplication;
 
 import com.google.firebase.FirebaseApp;
 
-public class ZCarApplication extends Application
+public class ZCarApplication extends MultiDexApplication
 {
     @Override
     public void onCreate()
