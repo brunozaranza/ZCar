@@ -3,12 +3,15 @@
 buildscript {
 
     ext.supportVersion = '28.0.0'
+    ext.playServicesVersion = '16.0.0'
+    ext.multidexVersion = '1.0.3'
     ext.firebaseVersion = '16.0.4'
     ext.authVersion = '16.0.5'
     ext.authUIVersion = '4.1.0'
     ext.firestoneVersion = '17.1.3'
     ext.storageVersion = '16.0.5'
     ext.gpsDriverVersion = '1.1'
+    ext.butterKnifeVersion = '9.0.0-rc2'
 
     repositories {
         google()
