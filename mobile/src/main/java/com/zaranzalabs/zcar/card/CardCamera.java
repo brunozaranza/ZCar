@@ -13,17 +13,14 @@ import com.zaranzalabs.zcar.R;
 
 import butterknife.ButterKnife;
 
-public class CardMap extends Fragment implements OnMapReadyCallback
+public class CardCamera extends Fragment
 {
-
-    public GoogleMap map;
-
-    public CardMap() {
+    public CardCamera() {
     }
 
-    public static CardMap newInstance()
+    public static CardCamera newInstance()
     {
-        CardMap fragment = new CardMap();
+        CardCamera fragment = new CardCamera();
         Bundle args = new Bundle();
         fragment.setArguments(args);
         return fragment;
@@ -42,17 +39,9 @@ public class CardMap extends Fragment implements OnMapReadyCallback
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
     {
-        View view = inflater.inflate(R.layout.card_map, container, false);
+        View view = inflater.inflate(R.layout.card_camera, container, false);
         ButterKnife.bind(this, view);
 
-        ((SupportMapFragment)getChildFragmentManager().findFragmentById(R.id.map)).getMapAsync(this);
-
         return view;
-    }
-
-    @Override
-    public void onMapReady(GoogleMap googleMap)
-    {
-        this.map = googleMap;
     }
 }

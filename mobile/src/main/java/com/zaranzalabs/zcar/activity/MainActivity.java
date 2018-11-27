@@ -1,11 +1,9 @@
 package com.zaranzalabs.zcar.activity;
 
 import android.support.annotation.NonNull;
-import android.support.v4.app.FragmentTransaction;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 
 import com.google.android.gms.tasks.OnFailureListener;
@@ -13,26 +11,28 @@ import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.zaranzalabs.zcar.R;
-import com.zaranzalabs.zcar.adapter.CellAdapter;
+import com.zaranzalabs.zcar.card.CardCamera;
+import com.zaranzalabs.zcar.card.CardCommand;
 import com.zaranzalabs.zcar.card.CardMap;
 import com.zaranzalabs.zcar.pojo.Headlights;
 
-import java.util.ArrayList;
+import butterknife.BindView;
+import butterknife.ButterKnife;
 
 public class MainActivity extends AppCompatActivity
 {
     private static final String TAG = MainActivity.class.getSimpleName();
 
+    @BindView(R.id.pull_to_refresh) SwipeRefreshLayout refresh;
+
     private FirebaseFirestore firestore;
-
-    private RecyclerView recyclerView;
-
-    private CellAdapter rvAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        ButterKnife.bind(this);
 
         firestore = FirebaseFirestore.getInstance();
 
@@ -51,34 +51,21 @@ public class MainActivity extends AppCompatActivity
                     }
                 });
 
-//        recyclerView = findViewById(R.id.recycler_view);
-//
-//        setupRecycler();
+        setupRefresh();
 
-        getFragmentTransaction().add(R.id.container, new CardMap(), "map").commit();
+        getSupportFragmentManager().beginTransaction().add(R.id.table_layout, CardCamera.newInstance()).commit();
+        getSupportFragmentManager().beginTransaction().add(R.id.table_layout, CardCommand.newInstance()).commit();
+        getSupportFragmentManager().beginTransaction().add(R.id.table_layout, CardMap.newInstance()).commit();
 
     }
 
-    private FragmentTransaction getFragmentTransaction()
+    private void setupRefresh()
     {
-        return getSupportFragmentManager().beginTransaction().setCustomAnimations(android.R.anim.fade_in, android.R.anim.fade_out);
+        refresh.hasNestedScrollingParent();
+        refresh.setOnRefreshListener(() ->
+            refresh.setRefreshing(false)
+        );
     }
 
 
-    private void setupRecycler()
-    {
-
-//        LinearLayoutManager layoutManager = new LinearLayoutManager(this);
-//        recyclerView.setLayoutManager(layoutManager);
-//
-//        ArrayList<String> arrayList = new ArrayList<>();
-//
-//        for (int i = 0; i < 3; i++) {
-//            arrayList.add("Cell " + i);
-//        }
-//
-//        rvAdapter = new CellAdapter(arrayList);
-//        recyclerView.setAdapter(rvAdapter);
-
-    }
 }
