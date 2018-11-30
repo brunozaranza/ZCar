@@ -97,21 +97,21 @@
                 android:orientation="vertical">
 
                 <Switch
-                    android:id="@+id/switch1"
+                    android:id="@+id/switch_headlights"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:gravity="center" />
 
                 <Switch
-                    android:id="@+id/switch2"
+                    android:id="@+id/switch_locks"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:gravity="center" />
 
                 <Switch
-                    android:id="@+id/switch3"
+                    android:id="@+id/switch_windows"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
