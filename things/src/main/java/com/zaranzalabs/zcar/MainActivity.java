@@ -15,13 +15,21 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.util.Log;
 
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.things.contrib.driver.gps.NmeaGpsDriver;
+import com.google.android.things.pio.Gpio;
+import com.google.android.things.pio.PeripheralManager;
+import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.EventListener;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.FirebaseFirestoreException;
+import com.google.firebase.firestore.FirebaseFirestoreSettings;
 import com.google.firebase.storage.FirebaseStorage;
 import com.zaranzalabs.zcar.board.BoardDefaults;
 import com.zaranzalabs.zcar.camera.ZCamera;
@@ -30,11 +38,16 @@ import com.zaranzalabs.zcar.pojo.Headlights;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
-public class MainActivity extends Activity {
+public class MainActivity extends Activity
+{
+    private static final String HEADLIGHTS_KEY = "headlights";
 
     private static final String TAG = MainActivity.class.getSimpleName();
     public static final int UART_BAUD = 9600;
     public static final float ACCURACY = 2.5f;
+
+    private Gpio ledGpio;
+    DocumentReference docHeadlightsRef;
 
     private FirebaseFirestore firestore;
     private FirebaseStorage mStorage;
@@ -64,43 +77,18 @@ public class MainActivity extends Activity {
         firestore = FirebaseFirestore.getInstance();
         mStorage = FirebaseStorage.getInstance();
 
+        FirebaseFirestoreSettings settings = new FirebaseFirestoreSettings.Builder()
+                .setTimestampsInSnapshotsEnabled(true)
+                .build();
+        firestore.setFirestoreSettings(settings);
+
         configCamera();
         configGPS();
+        configLed();
 
-        firestore.collection("headlights")
-                .add(new Headlights(true))
-                .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
-                    @Override
-                    public void onSuccess(DocumentReference documentReference) {
-                        Log.d(TAG, "DocumentSnapshot added with ID: " + documentReference.getId());
-                    }
-                })
-                .addOnFailureListener(new OnFailureListener() {
-                    @Override
-                    public void onFailure(@NonNull Exception e) {
-                        Log.w(TAG, "Error adding document", e);
-                    }
-                });
-
-//        DatabaseReference dbReference = mDatabase.getReference("status_camera");
-//        dbReference.setValue(false);
-//
-//        dbReference.addValueEventListener(new ValueEventListener() {
-//            @Override
-//            public void onDataChange(DataSnapshot dataSnapshot) {
-//
-//                boolean value = dataSnapshot.getValue(Boolean.class);
-//
-//                if (value == true) {
-//                    mCamera.takePicture();
-//                }
-//            }
-//
-//            @Override
-//            public void onCancelled(DatabaseError error) {
-//                Log.w("LOG", "Failed to read value.", error.toException());
-//            }
-//        });
+        CollectionReference collectionReference = firestore.collection("status");
+        docHeadlightsRef = collectionReference.document(HEADLIGHTS_KEY);
+        docHeadlightsRef.addSnapshotListener(documentSnapshotEventListener);
     }
 
     @Override
@@ -111,6 +99,36 @@ public class MainActivity extends Activity {
         mCameraThread.quitSafely();
         mCloudThread.quitSafely();
     }
+
+    private EventListener<DocumentSnapshot> documentSnapshotEventListener
+            = new EventListener<DocumentSnapshot>() {
+        @Override
+        public void onEvent(@Nullable DocumentSnapshot snapshot,
+                            @Nullable FirebaseFirestoreException e) {
+
+            if (e != null) {
+                Log.w(TAG, "Listen failed.", e);
+                return;
+            }
+
+            if (snapshot != null && snapshot.exists()) {
+
+                DocumentReference reference = snapshot.getReference();
+
+                Boolean status = (Boolean) snapshot.get("status");
+
+                if (reference.getId().equals(HEADLIGHTS_KEY)) {
+                    try {
+                        ledGpio.setValue(status.booleanValue());
+                    } catch (IOException ioe) {
+                        Log.e("LOG", "Error updating GPIO value", ioe);
+                    }
+                }
+            } else {
+                Log.d(TAG, "Current data: null");
+            }
+        }
+    };
 
     private ImageReader.OnImageAvailableListener mOnImageAvailableListener =
             new ImageReader.OnImageAvailableListener() {
@@ -202,6 +220,17 @@ public class MainActivity extends Activity {
             mLocationManager.addNmeaListener(mMessageListener);
         } catch (IOException e) {
             Log.w(TAG, "Unable to open GPS UART", e);
+        }
+    }
+
+    private void configLed()
+    {
+        PeripheralManager pioService = PeripheralManager.getInstance();
+        try {
+            ledGpio = pioService.openGpio(BoardDefaults.getGPIOForLED());
+            ledGpio.setDirection(Gpio.DIRECTION_OUT_INITIALLY_LOW);
+        } catch (IOException e) {
+            Log.e("LOG", "Error configuring GPIO pins", e);
         }
     }
 

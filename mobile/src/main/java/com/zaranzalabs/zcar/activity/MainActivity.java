@@ -39,14 +39,11 @@ public class MainActivity extends AppCompatActivity
 
         firestore = FirebaseFirestore.getInstance();
 
-
-
         setupRefresh();
 
         getSupportFragmentManager().beginTransaction().add(R.id.table_layout, CardCamera.newInstance()).commit();
         getSupportFragmentManager().beginTransaction().add(R.id.table_layout, CardCommand.newInstance()).commit();
         getSupportFragmentManager().beginTransaction().add(R.id.table_layout, CardMap.newInstance()).commit();
-
     }
 
     private void setupRefresh()
