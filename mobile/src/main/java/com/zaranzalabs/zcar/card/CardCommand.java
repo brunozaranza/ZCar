@@ -80,7 +80,7 @@ public class CardCommand extends Fragment
 
         firestore = FirebaseFirestore.getInstance();
 
-        CollectionReference collectionReference = firestore.collection("status");
+        CollectionReference collectionReference = firestore.collection("commands");
 
         docHeadlightsRef = collectionReference.document(HEADLIGHTS_KEY);
         docLocksRef = collectionReference.document(LOCKS_KEY);

@@ -17,7 +17,6 @@ import com.zaranzalabs.zcar.R;
 import com.zaranzalabs.zcar.card.CardCamera;
 import com.zaranzalabs.zcar.card.CardCommand;
 import com.zaranzalabs.zcar.card.CardMap;
-import com.zaranzalabs.zcar.pojo.Headlights;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;

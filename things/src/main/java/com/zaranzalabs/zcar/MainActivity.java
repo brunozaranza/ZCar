@@ -2,6 +2,7 @@ package com.zaranzalabs.zcar;
 
 import android.Manifest;
 import android.app.Activity;
+import android.content.Context;
 import android.content.pm.PackageManager;
 
 import android.location.GnssStatus;
@@ -11,15 +12,14 @@ import android.location.LocationManager;
 import android.location.OnNmeaMessageListener;
 import android.media.Image;
 import android.media.ImageReader;
+import android.net.wifi.WifiConfiguration;
+import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
-import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
-import com.google.android.gms.tasks.OnFailureListener;
-import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.things.contrib.driver.gps.NmeaGpsDriver;
 import com.google.android.things.pio.Gpio;
 import com.google.android.things.pio.PeripheralManager;
@@ -33,14 +33,17 @@ import com.google.firebase.firestore.FirebaseFirestoreSettings;
 import com.google.firebase.storage.FirebaseStorage;
 import com.zaranzalabs.zcar.board.BoardDefaults;
 import com.zaranzalabs.zcar.camera.ZCamera;
-import com.zaranzalabs.zcar.pojo.Headlights;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class MainActivity extends Activity
 {
     private static final String HEADLIGHTS_KEY = "headlights";
+    private static final String GPS_KEY = "gps";
 
     private static final String TAG = MainActivity.class.getSimpleName();
     public static final int UART_BAUD = 9600;
@@ -48,6 +51,7 @@ public class MainActivity extends Activity
 
     private Gpio ledGpio;
     DocumentReference docHeadlightsRef;
+    DocumentReference docGPSRef;
 
     private FirebaseFirestore firestore;
     private FirebaseStorage mStorage;
@@ -86,9 +90,11 @@ public class MainActivity extends Activity
         configGPS();
         configLed();
 
-        CollectionReference collectionReference = firestore.collection("status");
+        CollectionReference collectionReference = firestore.collection("commands");
         docHeadlightsRef = collectionReference.document(HEADLIGHTS_KEY);
         docHeadlightsRef.addSnapshotListener(documentSnapshotEventListener);
+
+        connectWifi();
     }
 
     @Override
@@ -98,6 +104,38 @@ public class MainActivity extends Activity
 
         mCameraThread.quitSafely();
         mCloudThread.quitSafely();
+    }
+
+    private void connectWifi()
+    {
+        String networkSSID = "Trojan Horse";
+        String networkPass = "mel.zs@123";
+
+        WifiConfiguration conf = new WifiConfiguration();
+        conf.SSID = "\"" + networkSSID + "\"";
+        conf.wepKeys[0] = "\"" + networkPass + "\"";
+        conf.wepTxKeyIndex = 0;
+        conf.allowedKeyManagement.set(WifiConfiguration.KeyMgmt.NONE);
+        conf.allowedGroupCiphers.set(WifiConfiguration.GroupCipher.WEP40);
+        conf.preSharedKey = "\""+ networkPass +"\"";
+        conf.allowedKeyManagement.set(WifiConfiguration.KeyMgmt.NONE);
+
+        WifiManager wifiManager = (WifiManager)getSystemService(Context.WIFI_SERVICE);
+        wifiManager.addNetwork(conf);
+
+        List<WifiConfiguration> list = wifiManager.getConfiguredNetworks();
+        for( WifiConfiguration i : list ) {
+            if(i.SSID != null && i.SSID.equals("\"" + networkSSID + "\"")) {
+                wifiManager.disconnect();
+                wifiManager.enableNetwork(i.networkId, true);
+                wifiManager.reconnect();
+
+                break;
+            }
+        }
+
+        Log.i("test", wifiManager.getConnectionInfo().toString());
+        Log.i("test", String.valueOf(wifiManager.getWifiState()));
     }
 
     private EventListener<DocumentSnapshot> documentSnapshotEventListener
@@ -240,7 +278,7 @@ public class MainActivity extends Activity
             if (lastLocation == null) {
                 lastLocation = location;
 
-                sendLocationToFirebase(location);
+                sendLocationToFirestore(location);
 
                 return;
             }
@@ -250,7 +288,7 @@ public class MainActivity extends Activity
 
                 lastLocation = location;
 
-                sendLocationToFirebase(location);
+                sendLocationToFirestore(location);
             }
         }
 
@@ -287,18 +325,23 @@ public class MainActivity extends Activity
         }
     };
 
-    private void sendLocationToFirebase(Location location)
+    private void sendLocationToFirestore(Location location)
     {
-//        DatabaseReference dbReference = mDatabase.getReference("location");
-//        dbReference.child("lat").setValue(location.getLatitude());
-//        dbReference.child("lon").setValue(location.getLongitude());
-//        dbReference.child("speed").setValue(location.getSpeed());
-//        dbReference.child("altitude").setValue(location.getAltitude());
-//        dbReference.child("time").setValue(location.getTime());
-//        dbReference.child("accuracy").setValue(location.getAccuracy());
-//        dbReference.child("bearing").setValue(location.getBearing());
-//        dbReference.child("bearing_accuracy_degrees").setValue(location.getBearingAccuracyDegrees());
-//        dbReference.child("vertical_accuracy_meters").setValue(location.getVerticalAccuracyMeters());
-//        dbReference.child("speed_accuracy_meters_per_second").setValue(location.getSpeedAccuracyMetersPerSecond());
+        CollectionReference collectionReference = firestore.collection("devices");
+        docGPSRef = collectionReference.document(GPS_KEY);
+        Map<String, Object> map = new HashMap<>();
+
+        map.put("lat", location.getLatitude());
+        map.put("lon", location.getLongitude());
+        map.put("speed", location.getSpeed());
+        map.put("altitude", location.getAltitude());
+        map.put("time", location.getTime());
+        map.put("accuracy", location.getAccuracy());
+        map.put("bearing", location.getBearing());
+        map.put("bearing_accuracy_degrees", location.getBearingAccuracyDegrees());
+        map.put("vertical_accuracy_meters", location.getVerticalAccuracyMeters());
+        map.put("speed_accuracy_meters_per_second", location.getSpeedAccuracyMetersPerSecond());
+
+        docGPSRef.set(map);
     }
 }
