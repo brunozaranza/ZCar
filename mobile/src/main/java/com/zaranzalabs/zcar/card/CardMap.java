@@ -41,13 +41,12 @@ import butterknife.ButterKnife;
 public class CardMap extends Fragment implements OnMapReadyCallback
 {
     private static final String TAG = CardMap.class.getSimpleName();
-
     private static final String GPS_KEY = "gps";
 
     @BindView(R.id.txt_last_position) TextView txtLastPosition;
 
     private FirebaseFirestore firestore;
-    DocumentReference docGPSRef;
+    private DocumentReference docGPSRef;
 
     public GoogleMap map;
 
